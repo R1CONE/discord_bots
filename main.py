@@ -22,4 +22,4 @@ async def on_voice_state_update(member, before, after):
             await channel.send(f"Приветствую тебя, {member.display_name}!")  # Отправляем сообщение приветствия
 
 
-client.run('MTE3MTM1ODc0Mjk1MzA3ODc4NA.GlNku_.DWPfUuOm1tVoPuT3ybZp28UyJyfdvW9lptp0jg')
+client.run('')
