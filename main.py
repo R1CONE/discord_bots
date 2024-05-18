@@ -1,25 +1,34 @@
+
 import discord
+from discord.ext import commands
 
-client = discord.Client(intents=discord.Intents.all())
 
-@client.event
+bot = commands.Bot(command_prefix='-', intents=discord.Intents.all(), case_insensitive=True)
+
+@bot.event
 async def on_ready():
-    print('Бот готов')
+    print('Bot is ready')
 
-@client.event
-async def on_voice_state_update(member, before, after):
-    global voice_channel
-    voice_channel = client.get_channel(1135157429433282561)
-    if after.channel and after.channel.id == 1135157429433282561 and after.channel != before.channel:
-        if len(after.channel.members) == 1:
-            print(f"Имя пользователя: {member.name}")
-            print(f"ID пользователя: {member.id}")
-            print(f"Отображаемое имя пользователя: {member.display_name}")
-            print(f"Никнейм на сервере: {member.nick}")
-            print(f"Дата создания учетной записи: {member.created_at}")
+@bot.command()
+async def sum(ctx):
+    user = ctx.author
+    if user.voice and user.voice.channel:
+        voice_channel = user.voice.channel
+        members = voice_channel.members
+        member_names = [member.name for member in members]
+        len_players = len(members)
 
-            channel = await client.fetch_channel(1135157429433282561)  # Получаем объект канала
-            await channel.send(f"Приветствую тебя, {member.display_name}!")  # Отправляем сообщение приветствия
+        print(f"Number of users in voice channel: {len(members)}")
+        print("User nicknames in the voice channel:")
+        for name in member_names:
+            print(name)
+            
+        game(member_names, len_players)
+    else:
+        print("User is not in a voice channel")
+        
+def game(member_names, len_players):
+    
 
 
 client.run('')
