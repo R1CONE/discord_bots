@@ -17,15 +17,18 @@ async def sum(ctx):
         members = voice_channel.members
         member_names = [member.name for member in members]
         len_players = len(members)
+        if(len_players > 12, len_players =< 9):
 
-        print(f"Number of users in voice channel: {len(members)}")
-        print("User nicknames in the voice channel:")
-        for name in member_names:
-            print(name)
+            print(f"Number of users in voice channel: {len(members)}")
+            print("User nicknames in the voice channel:")
+            for name in member_names:
+                print(name)
             
-        game(member_names, len_players)
+                game(member_names, len_players)
+        else ctx.send("len players > 12 or =< 9")
+        
     else:
-        print("User is not in a voice channel")
+    print("User is not in a voice channel")
         
 def game(member_names, len_players):
     
