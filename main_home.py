@@ -1,3 +1,4 @@
+
 import discord
 from discord.ext import commands
 import random
@@ -12,16 +13,20 @@ async def on_ready():
 
 
 @bot.command()
-async def start(ctx, mod1: discord.Member, mod2: discord.Member):
-    user = ctx.author
+async def start_game(ctx, mod1: discord.Member, mod2: discord.Member):
+    print(mod1)
+    print(mod2)
+    user = ctx.author #autor messa
     if user.voice and user.voice.channel:
+        print(user.voice, user.voice_channel)
         voice_channel = user.voice.channel
         members = voice_channel.members
         member_names = [member.name for member in members]
         len_players = len(members)
-        ctx.send(mod1, mod2)
+
+        ctx.send(f"Your moderators {mod1}" )
         
-        if(len_players > 12, len_players < 10):
+        if (len_players):
             print(f"Number of users in voice channel: {len(members)}")
             print("User nicknames in the voice channel:")
             for name in member_names:
@@ -36,7 +41,7 @@ async def start(ctx, mod1: discord.Member, mod2: discord.Member):
         print("User is not in a voice channel")
         
 
-        
+#part 2      
 @bot.command()
 async def help_command(ctx):
     embed = discord.Embed(title="Help", description="this help for disassembly in using the bot", color=0x00ff00)
