@@ -1,4 +1,3 @@
-
 import discord
 from discord.ext import commands
 import random
@@ -10,35 +9,35 @@ bot = commands.Bot(command_prefix='-', intents=discord.Intents.all(), case_insen
 @bot.event
 async def on_ready():
     print('Bot is ready')
+    try:
+        synced = await bot.tree.sync()
+        print(f"synced {len(synced)} commands(s)")
+    except Exception as e:
+        print(e)
 
 
 @bot.command()
-async def start_game(ctx, mod1: discord.Member, mod2: discord.Member):
-    print(mod1)
-    print(mod2)
-    user = ctx.author #autor messa
+async def start_game(ctx, kap1 = discord.member, kap2 = discord.member, moderator1 = discord.member, moderator2 = discord.member):
+    user = ctx.author
     if user.voice and user.voice.channel:
-        print(user.voice, user.voice_channel)
         voice_channel = user.voice.channel
         members = voice_channel.members
         member_names = [member.name for member in members]
         len_players = len(members)
-
-        ctx.send(f"Your moderators {mod1}" )
         
-        if (len_players):
-            print(f"Number of users in voice channel: {len(members)}")
-            print("User nicknames in the voice channel:")
-            for name in member_names:
-                print(name)
-        else: 
-            ctx.send("len players are > 12 or < 10")
-            
-            
+        # Для примера, выводим имена участников и их количество в текстовый канал
+        await ctx.send(f'Игроки в голосовом канале: {", ".join(member_names)}')
+        await ctx.send(f'Количество игроков: {len_players}')
 
+        if(member_names, len_players):
+            embed = discord.Embed(title="Добро пожаловать на фейсит", description="Капитаны, пикайте игроков", color=discord.Color.purple())
+            embed.set_thumbnail(url={})
+            embed.set_author(name="R1CONE faceit")
+            embed.add_field(name=f'Капитан 1 - {} - {} ', value=f'Игроки команды 1: {}')
+            embed.add_field(name=f'Капитан 2 - {} - {}', value=f'Игроки команды 2: {}')
         
     else:
-        print("User is not in a voice channel")
+        await ctx.send("Вы не находитесь в голосовом канале")
         
 
 #part 2      
