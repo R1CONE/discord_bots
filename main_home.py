@@ -12,16 +12,15 @@ async def on_ready():
     print("Slash commands: " + str(len(synced)) + " commands")
 
 @bot.tree.command(name="looking_user", description="Looking for discord user")
-async def looking_user(ctx, interaction: discord.Interaction, voice_channel_1: discord.VoiceChannel = None, voice_channel_2: discord.VoiceChannel = None):
-    user = ctx.author
+async def looking_user(interaction: discord.Interaction, voice_channel_1: discord.VoiceChannel = None, voice_channel_2: discord.VoiceChannel = None):
+    user = interaction.user
     if user.voice and user.voice.channel and voice_channel_1 and voice_channel_2:
         voice_channel = user.voice.channel
-        members = voice_channel.members
+        members = voice_channel.members #list with full information about everyone
         print(members)
-        member_names = [member.name for member in members]
+        member_names = [member.name for member in members] #list only with nicknames
         print(member_names)
-
-
+        await interaction.response.send_message(f'Members in voice channel: {", ".join(member_names)}')
     else:
         await interaction.response.send_message('No member specified.')
 
