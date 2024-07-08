@@ -21,18 +21,29 @@ async def looking_user(interaction: discord.Interaction, voice_channel_1: discor
         member_names = [member.name for member in members] #list only with nicknames
         print(member_names)
         await interaction.response.send_message(f'Members in voice channel: {", ".join(member_names)}')
+        
+        kapitan_names = random.sample(member_names, 2)
+        remaining_names = [name for name in member_names if name not in kapitan_names]
+
+
     else:
         await interaction.response.send_message('No member specified.')
 
-def Embed(member_names, voice_channel_1, voice_channel_2):
-    embed = discord.Embed(title="Welcome to discord fight 5v5", description="Kapitans, peak players", color=discord.Color.purple())
-    embed.set_thumbnail(url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRh6UJMDoGniGMJrj_UHk9fGlbSH0o8XR71w&s')
-    embed.set_author(name="5 V 5")
-    embed.add_field(name=f'Capitan 1 - ', value=f'Players team 1: ')
-    embed.add_field(name=f'Capitan 2 - ', value=f'Players team 2: ')
-    embed.add_field(name=f'unpicked plauers: {member_names}')
-        
+def Embed(kapitan_names, remaining_names, voice_channel_1, voice_channel_2):
+    member_team1 = []
+    member_team2 = []
+    global kap
 
-
+    if kap == 1:
+        embed = discord.Embed(title="Welcome to discord fight 5v5", description="Kapitans, peak players", color=discord.Color.purple())
+        embed.set_thumbnail(url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRh6UJMDoGniGMJrj_UHk9fGlbSH0o8XR71w&s')
+        embed.set_author(name="5 V 5")
+        embed.add_field(name=f'Capitan 1 - {kapitan_names[0]}', value=f'Players team 1: {member_team1}')
+        embed.add_field(name=f'Capitan 2 - {kapitan_names[1]}', value=f'Players team 2: {member_team2}')
+    
+    if remaining_names:
+        embed.add_field(name='Unpicked players:', value='\n'.join([f'{i + 1} - {remaining_names[i]} ' for i in range(len(remaining_names))]), inline=False)
+    else:
+        embed.add_field(name=f'Game is ready', value=f'Click to accept game')
 
 bot.run('')
