@@ -2,8 +2,10 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+
 bot = commands.Bot(command_prefix='-', intents=discord.Intents.all())
 bot.tracked_reactions = {}
+bot.member_names_dict = {}
 
 @bot.event
 async def on_ready():
@@ -33,6 +35,7 @@ async def looking_user(interaction: discord.Interaction, voice_channel_1: discor
             message = await interaction.followup.send(embed=embed)
             await message.add_reaction('\u2705')
             bot.tracked_reactions[message.id] = message
+            bot.member_names_dict[message.id] = member_names 
 
         
         else:
@@ -47,9 +50,17 @@ async def on_reaction_add(reaction, user):
     message = reaction.message
     if message.id in bot.tracked_reactions:
         if reaction.emoji == '\u2705':  # Проверяем, что это нужная реакция
-            print(f'User {user.name} reacted with {reaction.emoji}')
+            print(f'User {user.name} reacted with {reaction.emoji}') ##nickname only
             await message.channel.send(f'{user.mention} accepted the game!')
+            ##print(user.mention) user discord id only 
             accepted_players = []
-            accepted_players.append(user.mention)
+            accepted_players.append(user.name)
+
+            member_names = bot.member_names_dict.get(message.id, [])
+
+            if sorted(accepted_players) == sorted(member_names):
+                print("game start")
+
+
 
 bot.run('')
