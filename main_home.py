@@ -1,6 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
+import random
 
 
 bot = commands.Bot(command_prefix='-', intents=discord.Intents.all())
@@ -59,7 +60,15 @@ async def on_reaction_add(reaction, user):
             member_names = bot.member_names_dict.get(message.id, [])
 
             if sorted(accepted_players) == sorted(member_names):
-                print("game start")
+                peaking_players(accepted_players)
+
+def peaking_players(accepted_players):
+    kapitan_players = []
+    kapitan_players = random.sample(accepted_players, 2)
+    last_players = [player for player in accepted_players if player not in kapitan_players]
+
+    
+
 
 
 
