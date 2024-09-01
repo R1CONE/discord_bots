@@ -38,11 +38,9 @@ async def looking_user(interaction: discord.Interaction, voice_channel_1: discor
             bot.tracked_reactions[message.id] = message
             bot.member_names_dict[message.id] = member_names 
 
-        
         else:
             await interaction.response.send_message('Anti-abuse system')
 
-        
     else:
         await interaction.response.send_message('You are not in a voice channel.')
 
@@ -60,16 +58,42 @@ async def on_reaction_add(reaction, user):
             member_names = bot.member_names_dict.get(message.id, [])
 
             if sorted(accepted_players) == sorted(member_names):
-                peaking_players(accepted_players)
+                await peaking_players(message.channel, accepted_players, voice_channel_1, voice_channel_2)
 
-def peaking_players(accepted_players):
-    kapitan_players = []
+async def peaking_players(channel, accepted_players, voice_channel_1, voice_channel_2):
     kapitan_players = random.sample(accepted_players, 2)
     last_players = [player for player in accepted_players if player not in kapitan_players]
+    list_com1 = []
+    list_com2 = []
 
+    embed = discord.Embed(title="Welcome to discord fight", description="Let's start", color=discord.Color.purple())
+    embed.set_thumbnail(url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvbwstNLPp77vL3VG5G3H6EVUt705BVF-sEQ&usqp=CAU')
+    embed.set_author(name="discord battle")
+    embed.add_field(name=f'Capitan 1 - {kapitan_players[0]}', value=f'Players team 1: {list_com1}')
+    embed.add_field(name=f'Capitan 2 - {kapitan_players[1]}', value=f'Players team 2: {list_com2}')
+
+    if last_players:
+        embed.add_field(name='Unpicked players:', value='\n'.join([f'{i + 1} - {last_players[i]}' for i in range(len(last_players))]), inline=False)
+
+    await channel.send(embed=embed)
+
+    # Assign teams and move players
+    for el1 in list_com1:    
+        member = discord.utils.get(channel.guild.members, name=el1)
+        await member.move_to(voice_channel_1)
+    await kapitan_players[0].move_to(voice_channel_1)
+
+    for el2 in list_com2:    
+        member = discord.utils.get(channel.guild.members, name=el2)
+        await member.move_to(voice_channel_2)
+    await kapitan_players[1].move_to(voice_channel_2)
+
+    embed = discord.Embed(title="Game is ready!", description="Here are your teams:", color=discord.Color.purple())
+    embed.set_thumbnail(url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvbwstNLPp77vL3VG5G3H6EVUt705BVF-sEQ&usqp=CAU')
+    embed.set_author(name="discord battle")
+    embed.add_field(name=f'Capitan 1 - {kapitan_players[0]}', value=f'Players team 1: {", ".join(list_com1)}')
+    embed.add_field(name=f'Capitan 2 - {kapitan_players[1]}', value=f'Players team 2: {", ".join(list_com2)}')
     
-
-
-
+    await channel.send(embed=embed)
 
 bot.run('')
