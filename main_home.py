@@ -7,6 +7,8 @@ import random
 bot = commands.Bot(command_prefix='-', intents=discord.Intents.all())
 bot.tracked_reactions = {}
 bot.member_names_dict = {}
+emoji = ['\u0031\uFE0F\u20E3', '\u0032\uFE0F\u20E3', '\u0033\uFE0F\u20E3', '\u0034\uFE0F\u20E3', '\u0035\uFE0F\u20E3', '\u0036\uFE0F\u20E3', '\u0037\uFE0F\u20E3', '\u0038\uFE0F\u20E3']
+
 
 @bot.event
 async def on_ready():
@@ -25,7 +27,7 @@ async def looking_user(interaction: discord.Interaction, voice_channel_1: discor
         print(members)
         member_names = [member.name for member in members]
 
-        if len(member_names) == 1:
+        if len(member_names) > 4:
             await interaction.response.send_message(f'Members in voice channel: {", ".join(member_names)}')
 
             embed = discord.Embed(title="Welcome to discord fight 5v5", description="Get ready to start game!", color=discord.Color.purple())
@@ -59,6 +61,9 @@ async def on_reaction_add(reaction, user):
 
             if sorted(accepted_players) == sorted(member_names):
                 await peaking_players(message.channel, accepted_players, voice_channel_1, voice_channel_2)
+                
+                
+
 
 async def peaking_players(channel, accepted_players, voice_channel_1, voice_channel_2):
     kapitan_players = random.sample(accepted_players, 2)
@@ -76,6 +81,27 @@ async def peaking_players(channel, accepted_players, voice_channel_1, voice_chan
         embed.add_field(name='Unpicked players:', value='\n'.join([f'{i + 1} - {last_players[i]}' for i in range(len(last_players))]), inline=False)
 
     await channel.send(embed=embed)
+    
+    if user.id == kapitan1_id:
+        if kap == 1:
+            if str(reaction) in emoji:
+                emoji_index = emoji.index(str(reaction))
+                selected_player = players[emoji_index]
+                
+                if selected_player in list_com2:
+                    await target_channel.send(f'PLayer {selected_player} is peaked')
+                else:
+                    await target_channel.send(f'Capitan {kapitan_players[0]} peaked {selected_player} to team 1')
+                    if selected_player in last_players:
+                        last_players.remove(selected_player)
+                        list_com1.append(selected_player)
+                
+
+                
+                
+
+
+
 
     # Assign teams and move players
     for el1 in list_com1:    
