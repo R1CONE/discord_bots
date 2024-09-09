@@ -95,12 +95,17 @@ async def peaking_players(channel, accepted_players, voice_channel_1, voice_chan
                     if selected_player in last_players:
                         last_players.remove(selected_player)
                         list_com1.append(selected_player)
-                
-
-                
-                
-
-
+                        embed = discord.Embed(title="Welcome to discord fight", description="Let's start", color=discord.Color.purple())
+                        embed.set_thumbnail(url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvbwstNLPp77vL3VG5G3H6EVUt705BVF-sEQ&usqp=CAU')
+                        embed.set_author(name="discord battle")
+                        embed.add_field(name=f'Capitan 1 - {kapitan_players[0]}', value=f'Players team 1: {list_com1}')
+                        embed.add_field(name=f'Capitan 2 - {kapitan_players[1]}', value=f'Players team 2: {list_com2}')
+                        if last_players:
+                            embed.add_field(name='Unpicked players:', value='\n'.join([f'{i + 1} - {last_players[i]}' for i in range(len(last_players))]), inline=False)
+                           
+                        await channel.send(embed=embed)
+                        
+                        
 
 
     # Assign teams and move players
