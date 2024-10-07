@@ -9,7 +9,7 @@ bot.tracked_reactions = {}
 bot.member_names_dict = {}
 emoji = ['\u0031\uFE0F\u20E3', '\u0032\uFE0F\u20E3', '\u0033\uFE0F\u20E3', '\u0034\uFE0F\u20E3', '\u0035\uFE0F\u20E3', '\u0036\uFE0F\u20E3', '\u0037\uFE0F\u20E3', '\u0038\uFE0F\u20E3']
 
-kap = 1
+kap = True
 @bot.event
 async def on_ready():
     print('Bot is ready')
@@ -97,7 +97,7 @@ async def peaking_players(text_channel_id, user,channel, accepted_players, voice
     await channel.send(embed=embed)
     
     if user.id == kapitan1_id:
-        if kap == 1:
+        if kap == True:
             if str(reaction) in emoji:
                 emoji_index = emoji.index(str(reaction))
 
@@ -143,18 +143,18 @@ async def peaking_players(text_channel_id, user,channel, accepted_players, voice
                     for reaction in reactions_to_add:
                         await message.add_reaction(reaction)
                         
-                    kap = 2
+                    kap = False
                     
                     
             else:
                 target_channel = bot.get_channel(target_channel_id)  # Исправление: добавляем получение канала
                 await target_channel.send(f'Игрок {selected_player} уже выбран в команду 2')
-        elif kap == 2:
+        elif kap == False:
             await target_channel.send(f'Сейчас выбирает другой капитан')
 
 
     if user.id == kapitan2_id:
-        if kap == 2:
+        if kap == False:
             if str(reaction) in emoji:
                 emoji_index = emoji.index(str(reaction))
 
@@ -197,7 +197,7 @@ async def peaking_players(text_channel_id, user,channel, accepted_players, voice
                     for reaction in reactions_to_add:
                         await message.add_reaction(reaction)
 
-                    kap = 1
+                    kap = True
 
                                         
                     
@@ -209,7 +209,7 @@ async def peaking_players(text_channel_id, user,channel, accepted_players, voice
             else:
                 target_channel = client.get_channel(1141439369635438722)  # Исправление: добавляем получение канала
                 await target_channel.send(f'Игрок {selected_player} уже выбран в команду 1')
-        elif kap == 1:
+        elif kap == True:
             await target_channel.send(f'Сейчас выбирает другой капитан')
                         
                         
