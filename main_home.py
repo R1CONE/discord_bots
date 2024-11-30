@@ -3,13 +3,15 @@ from discord import app_commands
 from discord.ext import commands
 import random
 
-
+global voice_channel_1, voice_channel_2, kap
+accepted_players = []
+kap = 1  # Инициализация переменной kap
 bot = commands.Bot(command_prefix='-', intents=discord.Intents.all())
 bot.tracked_reactions = {}
 bot.member_names_dict = {}
+bot.voice_channels_dict = {}
 emoji = ['\u0031\uFE0F\u20E3', '\u0032\uFE0F\u20E3', '\u0033\uFE0F\u20E3', '\u0034\uFE0F\u20E3', '\u0035\uFE0F\u20E3', '\u0036\uFE0F\u20E3', '\u0037\uFE0F\u20E3', '\u0038\uFE0F\u20E3']
 
-kap = True
 @bot.event
 async def on_ready():
     print('Bot is ready')
@@ -36,9 +38,12 @@ async def looking_user(interaction: discord.Interaction, voice_channel_1: discor
             embed.add_field(name='Accept your game!', value=f'{", ".join(member_names)}')
         
             message = await interaction.followup.send(embed=embed)
-            await message.add_reaction('\u2705')
+            await message.add_reaction('\u2705') #\u0031\uFE0F\u20E3 #\u2705
+            
+            # Сохраняем данные каналов в словарь
             bot.tracked_reactions[message.id] = message
-            bot.member_names_dict[message.id] = member_names 
+            bot.member_names_dict[message.id] = member_names
+            bot.voice_channels_dict[message.id] = (voice_channel_1, voice_channel_2)
 
         else:
             await interaction.response.send_message('Anti-abuse system')
@@ -48,38 +53,39 @@ async def looking_user(interaction: discord.Interaction, voice_channel_1: discor
 
 @bot.event
 async def on_reaction_add(reaction, user):
+    if user.bot:
+        return
+    
     message = reaction.message
     if message.id in bot.tracked_reactions:
         if reaction.emoji == '\u2705':  # Проверяем, что это нужная реакция
             print(f'User {user.name} reacted with {reaction.emoji}')  # nickname only
             await message.channel.send(f'{user.mention} accepted the game!')
-            accepted_players = []
-            accepted_players.append(user.name)
+            
+            # Проверяем, есть ли пользователь уже в списке
+            if user.name not in accepted_players:
+                accepted_players.append(user.name)
+            
             print(f"accepted players {len(accepted_players)}")
             
             member_names = bot.member_names_dict.get(message.id, [])
+            voice_channel_1, voice_channel_2 = bot.voice_channels_dict.get(message.id, (None, None))
 
+            print(sorted(member_names))
+            print(sorted(accepted_players))
+
+            # Если все игроки приняли, вызываем peaking_players
             if sorted(accepted_players) == sorted(member_names):
-                await peaking_players(message.channel, accepted_players)
+                await peaking_players(message.channel.id, user, message.channel, accepted_players, voice_channel_1, voice_channel_2)
                 
-                
 
-
-async def peaking_players(text_channel_id, user,channel, accepted_players, voice_channel_1, voice_channel_2):
-
+async def peaking_players(text_channel_id, user, channel, accepted_players, voice_channel_1, voice_channel_2):
+    emoji = ['\u0031\uFE0F\u20E3', '\u0032\uFE0F\u20E3', '\u0033\uFE0F\u20E3', '\u0034\uFE0F\u20E3', '\u0035\uFE0F\u20E3', '\u0036\uFE0F\u20E3', '\u0037\uFE0F\u20E3', '\u0038\uFE0F\u20E3']
     global kap
 
     kapitan_players = random.sample(accepted_players, 2)
-    kapitan_1_full_info = kapitan_players[0]
-    kapitan_2_full_info = kapitan_players[1]
-
-    kapitan1_nickname = kapitan_1_full_info.name
-    kapitan2_nickname = kapitan_2_full_info.name
-
-    kapitan1_id = kapitan_1_full_info.id
-    kapitan2_id = kapitan_2_full_info.id
-
-
+    kapitan1_nickname = kapitan_players[0]
+    kapitan2_nickname = kapitan_players[1]
 
     last_players = [player for player in accepted_players if player not in kapitan_players]
     list_com1 = []
@@ -96,142 +102,111 @@ async def peaking_players(text_channel_id, user,channel, accepted_players, voice
 
     await channel.send(embed=embed)
     
-    if user.id == kapitan1_id:
-        if kap == True:
+    if user.id == kapitan1_nickname:
+        if kap == 1:
             if str(reaction) in emoji:
                 emoji_index = emoji.index(str(reaction))
 
                 selected_player = last_players[emoji_index]
                 
                 if selected_player in list_com2:
-                    target_channel = bot.get_channel(target_channel_id)
-                    await target_channel.send(f'Игрок {selected_player} уже выбран в команду 2')
+                    await channel.send(f'Player {selected_player} in other team')
                 else:
-                    target_channel_id = text_channel_id
-                    target_channel = bot.get_channel(target_channel_id)
-                    await target_channel.send(f'Капитан 1 выбрал игрока {selected_player} в команду 1')
+                    await channel.send(f'Capitan 1 picked {selected_player} to team 1')
                     if selected_player in last_players:
                         last_players.remove(selected_player)
-                        
-                        
-
                     
-                    list_voice1 = []
-                    list_voice1.append(selected_player)
+                    list_com1.append(selected_player)
                     
-                    
-                    new_embed = discord.Embed(title="Выбирает первый капитан", description="Капитаны, пикайте игроков", color=discord.Color.purple())
+                    new_embed = discord.Embed(title="Peaking second capitan", description="Capitan, pick players", color=discord.Color.purple())
                     new_embed.set_thumbnail(url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvbwstNLPp77vL3VG5G3H6EVUt705BVF-sEQ&usqp=CAU')
-                    new_embed.set_author(name="Faceit")
+                    new_embed.set_author(name="discord battle")
                     
-                    new_embed.add_field(name=f'Капитан 1 - {kapitan1_nickname}', value= f'Игроки комманды 1: {list_com1}')
-                    new_embed.add_field(name=f'Капитан 2 -{kapitan2_nickname}', value= f'Игроки комманды 2: {list_com2}')
+                    new_embed.add_field(name=f'Capitan 1 - {kapitan1_nickname}', value= f'Players team 1: {list_com1}')
+                    new_embed.add_field(name=f'Capitan 2 - {kapitan2_nickname}', value= f'Players team 2: {list_com2}')
 
                     if last_players:
-                        new_embed.add_field(name='Не пикнутые игроки:', value='\n'.join([f'{i + 1} - {last_players[i]}' for i in range(len(last_players))]), inline=False)
+                        new_embed.add_field(name='Unpicked players:', value='\n'.join([f'{i + 1} - {last_players[i]}' for i in range(len(last_players))]), inline=False)
                     else:
-                        new_embed.add_field(name='Готово!', value='Good luck, have fun!', inline=False)
+                        new_embed.add_field(name='Ready!!', value='Good luck, have fun!', inline=False)
     
-                    new_embed.set_footer(text="что бы пикнуть игрока, кажмите на эмодзи его номера")
+                    new_embed.set_footer(text="To pick a player, click on the emoji of his number")
 
-                    message = await target_channel.send(embed=new_embed)
+                    message = await channel.send(embed=new_embed)
 
-                    len_play = len(last_players)
-
-                    reactions_to_add = emoji[:len_play]
-
+                    reactions_to_add = emoji[len(last_players)]
                     for reaction in reactions_to_add:
                         await message.add_reaction(reaction)
                         
-                    kap = False
-                    
+                    kap = 2
                     
             else:
-                target_channel = bot.get_channel(target_channel_id)  # Исправление: добавляем получение канала
-                await target_channel.send(f'Игрок {selected_player} уже выбран в команду 2')
-        elif kap == False:
-            await target_channel.send(f'Сейчас выбирает другой капитан')
+                await channel.send(f'Player {selected_player} in other team')
+        elif kap == 2:
+            await channel.send(f'Now is peaking another capitan')
 
 
-    if user.id == kapitan2_id:
-        if kap == False:
+    if user.id == kapitan2_nickname:
+        if kap == 2:
             if str(reaction) in emoji:
                 emoji_index = emoji.index(str(reaction))
 
                 selected_player = last_players[emoji_index]
                 
                 if selected_player in list_com1:
-                    target_channel = bot.get_channel(target_channel_id)
-                    await target_channel.send(f'Игрок {selected_player} уже выбран в команду 1')
+                    await channel.send(f'Player {selected_player} in other team')
                 else:
-                    target_channel_id = text_channel_id
-                    target_channel = bot.get_channel(target_channel_id)
-                    await target_channel.send(f'Капитан 2 выбрал игрока {selected_player} в команду 2')
+                    await channel.send(f'Capitan 2 picked {selected_player} to team 2')
                     if selected_player in last_players:
                         last_players.remove(selected_player)
-                        
 
+                    list_com2.append(selected_player)
                     
-                    list_voice2 = []
-                    list_voice2.append(selected_player)
-                    
-                    new_embed = discord.Embed(title="Выбирает второй капитан", description="Капитаны, пикайте игроков", color=discord.Color.purple())
+                    new_embed = discord.Embed(title="Peaking second capitan", description="Capitan, pick players", color=discord.Color.purple())
                     new_embed.set_thumbnail(url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvbwstNLPp77vL3VG5G3H6EVUt705BVF-sEQ&usqp=CAU')
-                    new_embed.set_author(name="Faceit")
-                    new_embed.add_field(name=f'Капитан 1 - {kapitan1_nickname}', value= f'Игроки комманды 1: {list_com1}')
-                    new_embed.add_field(name=f'Капитан 2 - {kapitan2_nickname}', value= f'Игроки комманды 2: {list_com2}')
+                    new_embed.set_author(name="discord battle")
+                    new_embed.add_field(name=f'Capitan 1 - {kapitan1_nickname}', value= f'Players team 1: {list_com1}')
+                    new_embed.add_field(name=f'Capitan 2 - {kapitan2_nickname}', value= f'Players team 2: {list_com2}')
 
                     if last_players:
-                        new_embed.add_field(name='Не пикнутые игроки:', value='\n'.join([f'{i + 1} - {last_players[i]}' for i in range(len(last_players))]), inline=False)
+                        new_embed.add_field(name='Unpicked players:', value='\n'.join([f'{i + 1} - {last_players[i]}' for i in range(len(last_players))]), inline=False)
                     else:
-                        new_embed.add_field(name='Не пикнутые игроки:', value='Все игроки уже выбраны', inline=False)
+                        new_embed.add_field(name='Ready!!', value='Good luck, have fun!', inline=False)
     
-                    new_embed.set_footer(text="что бы пикнуть игрока, кажмите на эмодзи его номера")
+                    new_embed.set_footer(text="To pick a player, click on the emoji of his number")
 
-                    message = await target_channel.send(embed=new_embed)
+                    message = await channel.send(embed=new_embed)
                     
-                    len_play = len(last_players)
-
-                    reactions_to_add = emoji[:len_play]
-                    
+                    reactions_to_add = emoji[len(last_players)]
                     for reaction in reactions_to_add:
                         await message.add_reaction(reaction)
 
-                    kap = True
-
-                                        
-                    
-
-                    
-                    
-    
+                    kap = 1
                     
             else:
-                target_channel = client.get_channel(1141439369635438722)  # Исправление: добавляем получение канала
-                await target_channel.send(f'Игрок {selected_player} уже выбран в команду 1')
-        elif kap == True:
-            await target_channel.send(f'Сейчас выбирает другой капитан')
-                        
+                await channel.send(f'Player {selected_player} in other team')
+        elif kap == 1:
+            await channel.send(f'Now is peaking another capitan')
                         
 
+    if len(last_players) == 0:
+        # Assign teams and move players
+        for el1 in list_com1:    
+            member = discord.utils.get(channel.guild.members, name=el1)
+            await member.move_to(voice_channel_1)
+        await kapitan_players[0].move_to(voice_channel_1)
 
-    # Assign teams and move players
-    for el1 in list_com1:    
-        member = discord.utils.get(channel.guild.members, name=el1)
-        await member.move_to(voice_channel_1)
-    await kapitan_players[0].move_to(voice_channel_1)
+        for el2 in list_com2:    
+           member = discord.utils.get(channel.guild.members, name=el2)
+           await member.move_to(voice_channel_2)
+        await kapitan_players[1].move_to(voice_channel_2)
 
-    for el2 in list_com2:    
-        member = discord.utils.get(channel.guild.members, name=el2)
-        await member.move_to(voice_channel_2)
-    await kapitan_players[1].move_to(voice_channel_2)
-
-    embed = discord.Embed(title="Game is ready!", description="Here are your teams:", color=discord.Color.purple())
-    embed.set_thumbnail(url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvbwstNLPp77vL3VG5G3H6EVUt705BVF-sEQ&usqp=CAU')
-    embed.set_author(name="discord battle")
-    embed.add_field(name=f'Capitan 1 - {kapitan_players[0]}', value=f'Players team 1: {", ".join(list_com1)}')
-    embed.add_field(name=f'Capitan 2 - {kapitan_players[1]}', value=f'Players team 2: {", ".join(list_com2)}')
+        embed = discord.Embed(title="Game is ready!", description="Here are your teams:", color=discord.Color.purple())
+        embed.set_thumbnail(url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvbwstNLPp77vL3VG5G3H6EVUt705BVF-sEQ&usqp=CAU')
+        embed.set_author(name="discord battle")
+        embed.add_field(name=f'Capitan 1 - {kapitan_players[0]}', value=f'Players team 1: {", ".join(list_com1)}')
+        embed.add_field(name=f'Capitan 2 - {kapitan_players[1]}', value=f'Players team 2: {", ".join(list_com2)}')
     
-    await channel.send(embed=embed)
+        await channel.send(embed=embed)
 
-bot.run('')
+bot.run('MTExMh0')
