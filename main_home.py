@@ -29,13 +29,13 @@ async def looking_user(interaction: discord.Interaction, voice_channel_1: discor
         print(members)
         member_names = [member.name for member in members]
 
-        if len(member_names) == 4:
+        if len(member_names) <= 10: ## и больше 4
             await interaction.response.send_message(f'Members in voice channel: {", ".join(member_names)}')
 
             embed = discord.Embed(title="Welcome to discord fight 5v5", description="Get ready to start game!", color=discord.Color.purple())
             embed.set_thumbnail(url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRh6UJMDoGniGMJrj_UHk9fGlbSH0o8XR71w&s')
             embed.set_author(name="5 V 5")
-            embed.add_field(name='Accept your game!', value=f'{", ".join(member_names)}')
+            embed.add_field(name='Accept your game!', value=f'{", ".join(f"@{name}" for name in member_names)}')
         
             message = await interaction.followup.send(embed=embed)
             await message.add_reaction('\u2705')
@@ -94,8 +94,8 @@ async def peaking_players(message, user, accepted_players, voice_channel_1, voic
     )
     embed.set_thumbnail(url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvbwstNLPp77vL3VG5G3H6EVUt705BVF-sEQ&usqp=CAU')
     embed.set_author(name="discord battle")
-    embed.add_field(name=f'Capitan 1 - {kapitan1_nickname}', value=f'Players team 1: {list_com1}')
-    embed.add_field(name=f'Capitan 2 - {kapitan2_nickname}', value=f'Players team 2: {list_com2}')
+    embed.add_field(name=f'Capitan 1 - @{kapitan1_nickname}', value=f'Players team 1: {list_com1}')
+    embed.add_field(name=f'Capitan 2 - @{kapitan2_nickname}', value=f'Players team 2: {list_com2}')
     embed.add_field(name='Unpeaked players:', value='\n'.join(last_players), inline=False)
 
     message = await message.channel.send(embed=embed)
@@ -119,8 +119,9 @@ async def peaking_players(message, user, accepted_players, voice_channel_1, voic
         if emoji_index < len(last_players):
             selected_player = last_players.pop(emoji_index)
 
-            # Удаляем реакцию после выбора игрока
-            await message.remove_reaction(reaction.emoji, user)
+            await message.clear_reaction(reaction.emoji)
+
+            
 
             if current_kapitan == kapitan1_nickname:
                 list_com1.append(selected_player)
@@ -130,9 +131,11 @@ async def peaking_players(message, user, accepted_players, voice_channel_1, voic
                 current_kapitan = kapitan1_nickname
 
             embed.clear_fields()
-            embed.add_field(name=f'Capitan 1 - {kapitan1_nickname}', value=f'Players team 1: {", ".join(list_com1)}')
-            embed.add_field(name=f'Capitan 2 - {kapitan2_nickname}', value=f'Players team 2: {", ".join(list_com2)}')
+            embed.add_field(name=f'Capitan 1 - @{kapitan1_nickname}', value=f'Players team 1: {", ".join(list_com1)}')
+            embed.add_field(name=f'Capitan 2 - @{kapitan2_nickname}', value=f'Players team 2: {", ".join(list_com2)}')
             embed.add_field(name='Unpeaked players:', value='\n'.join(last_players) if last_players else 'All players have been picked', inline=False)
+
+            
 
             await message.edit(embed=embed)
 
@@ -149,10 +152,10 @@ async def peaking_players(message, user, accepted_players, voice_channel_1, voic
     embed = discord.Embed(title="Game is ready!", description="Here are your teams:", color=discord.Color.purple())
     embed.set_thumbnail(url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvbwstNLPp77vL3VG5G3H6EVUt705BVF-sEQ&usqp=CAU')
     embed.set_author(name="discord battle")
-    embed.add_field(name=f'Capitan 1 - {kapitan1_nickname}', value=f'Players team 1: {", ".join(list_com1)}')
-    embed.add_field(name=f'Capitan 2 - {kapitan2_nickname}', value=f'Players team 2: {", ".join(list_com2)}')
+    embed.add_field(name=f'Capitan 1 - @{kapitan1_nickname}', value=f'Players team 1: {", ".join(list_com1)}')
+    embed.add_field(name=f'Capitan 2 - @{kapitan2_nickname}', value=f'Players team 2: {", ".join(list_com2)}')
 
     await message.channel.send(embed=embed)
 
 
-bot.run('MTExM-18QpG5h0')
+bot.run('MTEWYB5Fz6-18QpG5h0')
