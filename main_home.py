@@ -1,7 +1,9 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
+import pymysql
 import random
+
 
 global voice_channel_1, voice_channel_2, kap
 accepted_players = []
@@ -10,7 +12,16 @@ bot = commands.Bot(command_prefix='-', intents=discord.Intents.all())
 bot.tracked_reactions = {}
 bot.member_names_dict = {}
 bot.voice_channels_dict = {}
+server_activation_status = {}  # Словарь для отслеживания статуса активации по серверам
 emoji = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣']
+
+try:
+    # Nawiązywanie połączenia z bazą danych
+    connection = pymysql.connect(host='localhost', user='root',
+                                 password='', database='dis_faceit')
+
+except Exception as e:
+    print(f"Error connecting to database: {e}")
 
 @bot.event
 async def on_ready():
@@ -18,17 +29,23 @@ async def on_ready():
     synced = await bot.tree.sync()
     print(synced)
     print("Slash commands: " + str(len(synced)) + " commands")
+    
 
 @bot.tree.command(name="looking_user", description="Looking for discord user")
 @app_commands.describe(voice_channel_1="First voice channel", voice_channel_2="Second voice channel")
 async def looking_user(interaction: discord.Interaction, voice_channel_1: discord.VoiceChannel = None, voice_channel_2: discord.VoiceChannel = None):
-    user = interaction.user
+    guild_id = interaction.guild.id  # Получаем ID текущей гильдии
+    if not server_activation_status.get(guild_id, False):
+        await interaction.response.send_message('The bot is not activated on this server. Use `/start` to activate it.')
+        return
+
+    user = interaction.user   
     if user.voice and user.voice.channel and voice_channel_1 and voice_channel_2:
         voice_channel = user.voice.channel
         members = voice_channel.members
         member_names = [member.name for member in members]
 
-        if len(member_names) <= 10:
+        if 4 <= len(member_names) <= 10:
             await interaction.response.send_message(f'Members in voice channel: {", ".join(member_names)}')
 
             embed = discord.Embed(title="Welcome to discord fight 5v5", description="Get ready to start game!", color=discord.Color.purple())
@@ -48,6 +65,32 @@ async def looking_user(interaction: discord.Interaction, voice_channel_1: discor
     else:
         await interaction.response.send_message('You are not in a voice channel.')
 
+    
+@bot.tree.command(name="start", description="Start the bot and display basic information")
+async def start_command(interaction: discord.Interaction):
+    server_name = interaction.guild.name  # Получаем имя гильдии
+    guild_id = interaction.guild.id  # Получаем ID текущей гильдии
+    server_activation_status[guild_id] = True  # Активируем бота для этой гильдии
+
+    embed = discord.Embed(
+        title="Welcome to the Discord Battle Bot!",
+        description=(
+            "Use the available commands to organize voice channel games and battles:\n"
+            "- `/looking_user`: Search for users in voice channels to start a game.\n"
+            "- `/start`: Display this information.\n\n"
+            "Let the games begin!"
+        ),
+        color=discord.Color.blue()
+    )
+    embed.set_thumbnail(
+        url="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvbwstNLPp77vL3VG5G3H6EVUt705BVF-sEQ&usqp=CAU"
+    )
+    embed.set_footer(text="Enjoy the game!")
+
+    await interaction.response.send_message(embed=embed)
+
+
+
 @bot.event
 async def on_reaction_add(reaction, user):
     if user.bot:
@@ -66,7 +109,7 @@ async def on_reaction_add(reaction, user):
             member_names = bot.member_names_dict.get(message.id, [])
             voice_channel_1, voice_channel_2 = bot.voice_channels_dict.get(message.id, (None, None))
 
-            if sorted(accepted_players) == sorted(member_names):
+            if all(player in member_names for player in accepted_players): 
                 await peaking_players(message, accepted_players, voice_channel_1, voice_channel_2)
 
 async def peaking_players(message, accepted_players, voice_channel_1, voice_channel_2):
@@ -75,19 +118,23 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
 
     last_players = [player for player in accepted_players if player not in kapitan_players]
     list_com1, list_com2 = [], []
-
+    current_kapitan = kapitan1_nickname
     unpeaked_players = {index: player for index, player in enumerate(last_players)}
 
     embed = discord.Embed(
         title="Welcome to discord fight",
-        description="Let's start",
+        description= f"Now is peaking {current_kapitan}",
         color=discord.Color.purple()
     )
     embed.set_thumbnail(url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvbwstNLPp77vL3VG5G3H6EVUt705BVF-sEQ&usqp=CAU')
     embed.set_author(name="discord battle")
     embed.add_field(name=f'Capitan 1 - @{kapitan1_nickname}', value=f'Players team 1: {list_com1}')
     embed.add_field(name=f'Capitan 2 - @{kapitan2_nickname}', value=f'Players team 2: {list_com2}')
-    embed.add_field(name='Unpeaked players:', value='\n'.join(unpeaked_players.values()), inline=False)
+    embed.add_field(
+    name='Unpeaked players:', 
+    value='\n'.join([f"{player} - {(index + 1)}" for index, player in unpeaked_players.items()]) if unpeaked_players else 'All players have been picked', 
+    inline=False
+)
 
     message = await message.channel.send(embed=embed)
 
@@ -95,7 +142,7 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
     for reaction in reactions_to_add:
         await message.add_reaction(reaction)
 
-    current_kapitan = kapitan1_nickname
+    
     while unpeaked_players:
         def check(reaction, user):
             return (
@@ -122,9 +169,33 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
 
         await message.clear_reaction(reaction.emoji)
         embed.clear_fields()
+        embed.description= f"Now is peaking {current_kapitan}"
         embed.add_field(name=f'Capitan 1 - @{kapitan1_nickname}', value=f'Players team 1: {", ".join(list_com1)}')
         embed.add_field(name=f'Capitan 2 - @{kapitan2_nickname}', value=f'Players team 2: {", ".join(list_com2)}')
-        embed.add_field(name='Unpeaked players:', value='\n'.join(unpeaked_players.values()) if unpeaked_players else 'All players have been picked', inline=False)
+        embed.add_field(
+    name='Unpeaked players:', 
+    value='\n'.join([f"{player} - {(index + 1)}" for index, player in unpeaked_players.items()]) if unpeaked_players else 'All players have been picked', 
+    inline=False
+)
         await message.edit(embed=embed)
+
+    for el1 in list_com1:    
+        member = discord.utils.get(message.guild.members, name=el1)
+        await member.move_to(voice_channel_1)
+    await message.guild.get_member_named(kapitan1_nickname).move_to(voice_channel_1)
+
+    for el2 in list_com2:    
+        member = discord.utils.get(message.guild.members, name=el2)
+        await member.move_to(voice_channel_2)
+    await message.guild.get_member_named(kapitan2_nickname).move_to(voice_channel_2)
+
+    embed = discord.Embed(title="Game is ready!", description="Here are your teams:", color=discord.Color.purple())
+    embed.set_thumbnail(url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvbwstNLPp77vL3VG5G3H6EVUt705BVF-sEQ&usqp=CAU')
+    embed.set_author(name="discord battle")
+    embed.add_field(name=f'Capitan 1 - @{kapitan1_nickname}', value=f'Players team 1: {", ".join(list_com1)}')
+    embed.add_field(name=f'Capitan 2 - @{kapitan2_nickname}', value=f'Players team 2: {", ".join(list_com2)}')
+
+    await message.channel.send(embed=embed)
+    await message.remove_reaction(emoji, user)
         
-bot.run('MTExMjQtYHbLWYB5Fz6-18QpG5h0')
+bot.run('MTMyNFen6yTeP7Vfg4')
