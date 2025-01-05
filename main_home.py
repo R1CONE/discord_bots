@@ -35,15 +35,34 @@ async def on_ready():
 @app_commands.describe(voice_channel_1="First voice channel", voice_channel_2="Second voice channel")
 async def looking_user(interaction: discord.Interaction, voice_channel_1: discord.VoiceChannel = None, voice_channel_2: discord.VoiceChannel = None):
     guild_id = interaction.guild.id  # Получаем ID текущей гильдии
-    if not server_activation_status.get(guild_id, False):
-        await interaction.response.send_message('The bot is not activated on this server. Use `/start` to activate it.')
-        return
+    server_name = interaction.guild.name
+    voice_channel = interaction.user.voice.channel
+    members = voice_channel.members
+    member_names = [member.name for member in members]
+    
+    with connection.cursor() as cursor:
+        for member in members:
+            print(f'Member ID: {member.id}, Member Name: {member.name}')
+            
+            # SQL-запрос для проверки наличия записи
+            check_query = f"SELECT COUNT(*) FROM `{server_name}` WHERE user_id = {member.id};"
+            cursor.execute(check_query)
+            (exists,) = cursor.fetchone()
+            
+            if not exists:
+                # SQL-запрос для вставки данных о пользователе
+                insert_query = f"""
+                    INSERT INTO `{server_name}` (user_id, user_name, mmr)
+                    VALUES ({member.id}, '{member.name}', '100');"""
+                cursor.execute(insert_query)
+                connection.commit()
+                
+                
+
 
     user = interaction.user   
     if user.voice and user.voice.channel and voice_channel_1 and voice_channel_2:
-        voice_channel = user.voice.channel
-        members = voice_channel.members
-        member_names = [member.name for member in members]
+        
 
         if 4 <= len(member_names) <= 10:
             await interaction.response.send_message(f'Members in voice channel: {", ".join(member_names)}')
@@ -60,7 +79,7 @@ async def looking_user(interaction: discord.Interaction, voice_channel_1: discor
             bot.member_names_dict[message.id] = member_names
             bot.voice_channels_dict[message.id] = (voice_channel_1, voice_channel_2)
         else:
-            await interaction.response.send_message('Anti-abuse system')
+            await interaction.response.send_message('count of players is <= 4 or <=10')
 
     else:
         await interaction.response.send_message('You are not in a voice channel.')
@@ -89,7 +108,27 @@ async def start_command(interaction: discord.Interaction):
 
     await interaction.response.send_message(embed=embed)
 
+    try:
+        with connection.cursor() as cursor:
+            # SQL-запрос для создания таблицы
+            sql = f"""
+            CREATE TABLE IF NOT EXISTS `{server_name}` (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id VARCHAR(255) NOT NULL,
+                user_name VARCHAR(255) NOT NULL,
+                mmr INT NOT NULL,
+                join_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """
+            cursor.execute(sql)
+            connection.commit()
+            print(f"Table `{server_name}` checked/created successfully.")
 
+
+    except Exception as e:
+        print(f"Error creating table `{server_name}`: {e}")
+
+    
 
 @bot.event
 async def on_reaction_add(reaction, user):
@@ -109,8 +148,9 @@ async def on_reaction_add(reaction, user):
             member_names = bot.member_names_dict.get(message.id, [])
             voice_channel_1, voice_channel_2 = bot.voice_channels_dict.get(message.id, (None, None))
 
-            if all(player in member_names for player in accepted_players): 
-                await peaking_players(message, accepted_players, voice_channel_1, voice_channel_2)
+            if len(accepted_players) == len(member_names):
+                if all(player in member_names for player in accepted_players): 
+                    await peaking_players(message, accepted_players, voice_channel_1, voice_channel_2)
 
 async def peaking_players(message, accepted_players, voice_channel_1, voice_channel_2):
     kapitan_players = random.sample(accepted_players, 2)
@@ -198,4 +238,4 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
     await message.channel.send(embed=embed)
     await message.remove_reaction(emoji, user)
         
-bot.run('MTMyNFen6yTeP7Vfg4')
+bot.run('MTMyNDA36yTeP7Vfg4')
