@@ -13,7 +13,7 @@ bot.tracked_reactions = {}
 bot.member_names_dict = {}
 bot.voice_channels_dict = {}
 server_activation_status = {}  # Словарь для отслеживания статуса активации по серверам
-emoji = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣']
+emoji = ['\u0031\uFE0F\u20E3', '\u0032\uFE0F\u20E3', '\u0033\uFE0F\u20E3', '\u0034\uFE0F\u20E3', '\u0035\uFE0F\u20E3', '\u0036\uFE0F\u20E3', '\u0037\uFE0F\u20E3', '\u0038\uFE0F\u20E3']
 
 try:
     # Nawiązywanie połączenia z bazą danych
@@ -151,6 +151,9 @@ async def on_reaction_add(reaction, user):
             if len(accepted_players) == len(member_names):
                 if all(player in member_names for player in accepted_players): 
                     await peaking_players(message, accepted_players, voice_channel_1, voice_channel_2)
+                    accepted_players.clear()
+                    await message.delete()
+
 
 async def peaking_players(message, accepted_players, voice_channel_1, voice_channel_2):
     kapitan_players = random.sample(accepted_players, 2)
@@ -238,4 +241,4 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
     await message.channel.send(embed=embed)
     await message.remove_reaction(emoji, user)
         
-bot.run('MTMyNDA36yTeP7Vfg4')
+bot.run('MTMyNDAV8oFen6yTeP7Vfg4')
