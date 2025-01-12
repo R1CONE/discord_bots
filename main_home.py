@@ -39,20 +39,22 @@ async def looking_user(interaction: discord.Interaction, voice_channel_1: discor
     voice_channel = interaction.user.voice.channel
     members = voice_channel.members
     member_names = [member.name for member in members]
+    normal_server_name = server_name.replace(" ", "_")
+    history_server_name = normal_server_name + "_history"
     
     with connection.cursor() as cursor:
         for member in members:
             print(f'Member ID: {member.id}, Member Name: {member.name}')
             
             # SQL-запрос для проверки наличия записи
-            check_query = f"SELECT COUNT(*) FROM `{server_name}` WHERE user_id = {member.id};"
+            check_query = f"SELECT COUNT(*) FROM `{normal_server_name}` WHERE user_id = {member.id};"
             cursor.execute(check_query)
             (exists,) = cursor.fetchone()
             
             if not exists:
                 # SQL-запрос для вставки данных о пользователе
                 insert_query = f"""
-                    INSERT INTO `{server_name}` (user_id, user_name, mmr)
+                    INSERT INTO `{normal_server_name}` (user_id, user_name, mmr)
                     VALUES ({member.id}, '{member.name}', '100');"""
                 cursor.execute(insert_query)
                 connection.commit()
@@ -107,17 +109,48 @@ async def start_command(interaction: discord.Interaction):
     embed.set_footer(text="Enjoy the game!")
 
     await interaction.response.send_message(embed=embed)
+    normal_server_name = server_name.replace(" ", "_")
+
+    history_server_name = normal_server_name + "_history"
 
     try:
         with connection.cursor() as cursor:
             # SQL-запрос для создания таблицы
             sql = f"""
-            CREATE TABLE IF NOT EXISTS `{server_name}` (
+            CREATE TABLE IF NOT EXISTS `{normal_server_name}` (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 user_id VARCHAR(255) NOT NULL,
                 user_name VARCHAR(255) NOT NULL,
                 mmr INT NOT NULL,
                 join_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """
+            cursor.execute(sql)
+            connection.commit()
+            print(f"Table `{server_name}` checked/created successfully.")
+
+
+    except Exception as e:
+        print(f"Error creating table `{history_server_name}`: {e}")
+
+    try:
+        with connection.cursor() as cursor:
+            # SQL-запрос для создания таблицы
+            sql = f"""
+            CREATE TABLE IF NOT EXISTS `{history_server_name}` (
+                id_of_game VARCHAR(255)  PRIMARY KEY,
+                id_player_1_team_1 INT,
+                id_player_2_team_1 INT,
+                id_player_3_team_1 INT,
+                id_player_4_team_1 INT,
+                id_player_5_team_1 INT,
+                id_player_1_team_2 INT,
+                id_player_2_team_2 INT,
+                id_player_3_team_2 INT,
+                id_player_4_team_2 INT,
+                id_player_5_team_2 INT,
+                game_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """
             cursor.execute(sql)
@@ -241,4 +274,4 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
     await message.channel.send(embed=embed)
     await message.remove_reaction(emoji, user)
         
-bot.run('MTMyNDAV8oFen6yTeP7Vfg4')
+bot.run('MTMyNDA36yTeP7Vfg4')
