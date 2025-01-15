@@ -34,54 +34,51 @@ async def on_ready():
 @bot.tree.command(name="looking_user", description="Looking for discord user")
 @app_commands.describe(voice_channel_1="First voice channel", voice_channel_2="Second voice channel")
 async def looking_user(interaction: discord.Interaction, voice_channel_1: discord.VoiceChannel = None, voice_channel_2: discord.VoiceChannel = None):
-    guild_id = interaction.guild.id  # Получаем ID текущей гильдии
-    server_name = interaction.guild.name
-    voice_channel = interaction.user.voice.channel
-    members = voice_channel.members
-    member_names = [member.name for member in members]
-    normal_server_name = server_name.replace(" ", "_")
-    history_server_name = normal_server_name + "_history"
-    
-    with connection.cursor() as cursor:
-        for member in members:
-            print(f'Member ID: {member.id}, Member Name: {member.name}')
-            
-            # SQL-запрос для проверки наличия записи
-            check_query = f"SELECT COUNT(*) FROM `{normal_server_name}` WHERE user_id = {member.id};"
-            cursor.execute(check_query)
-            (exists,) = cursor.fetchone()
-            
-            if not exists:
-                # SQL-запрос для вставки данных о пользователе
-                insert_query = f"""
-                    INSERT INTO `{normal_server_name}` (user_id, user_name, mmr)
-                    VALUES ({member.id}, '{member.name}', '100');"""
-                cursor.execute(insert_query)
-                connection.commit()
-                
-                
+    if interaction.user.voice and interaction.user.voice.channel:
 
+        accepted_players.clear()
 
-    user = interaction.user   
-    if user.voice and user.voice.channel and voice_channel_1 and voice_channel_2:
+        voice_channel = interaction.user.voice.channel
+        members = voice_channel.members
+        member_names = [member.name for member in members]
+        guild_id = interaction.guild.id
+        server_name = interaction.guild.name
+        normal_server_name = server_name.replace(" ", "_")
+        history_server_name = normal_server_name + "_history"
+
         
 
-        if 4 <= len(member_names) <= 10:
-            await interaction.response.send_message(f'Members in voice channel: {", ".join(member_names)}')
+        
 
-            embed = discord.Embed(title="Welcome to discord fight 5v5", description="Get ready to start game!", color=discord.Color.purple())
-            embed.set_thumbnail(url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRh6UJMDoGniGMJrj_UHk9fGlbSH0o8XR71w&s')
-            embed.set_author(name="5 V 5")
-            embed.add_field(name='Accept your game!', value=f'{", ".join(f"@{name}" for name in member_names)}')
-            
-            message = await interaction.followup.send(embed=embed)
-            await message.add_reaction('\u2705')
-            
-            bot.tracked_reactions[message.id] = message
-            bot.member_names_dict[message.id] = member_names
-            bot.voice_channels_dict[message.id] = (voice_channel_1, voice_channel_2)
+
+        if voice_channel_1 and voice_channel_2:
+            if 4 <= len(member_names) <= 10:
+                await interaction.response.send_message(f'Members in voice channel: {", ".join(member_names)}')
+
+                embed = discord.Embed(
+                    title="Welcome to discord fight 5v5",
+                    description="Get ready to start game!",
+                    color=discord.Color.purple()
+                )
+                embed.set_thumbnail(url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRh6UJMDoGniGMJrj_UHk9fGlbSH0o8XR71w&s')
+                embed.set_author(name="5 V 5")
+                embed.add_field(name='Accept your game!', value=f'{", ".join(f"@{name}" for name in member_names)}')
+
+                message = await interaction.followup.send(embed=embed)
+                await message.add_reaction('\u2705')
+
+                bot.tracked_reactions[message.id] = message
+                bot.member_names_dict[message.id] = member_names
+                bot.voice_channels_dict[message.id] = (voice_channel_1, voice_channel_2)
+
+                
+
+
+
+            else:
+                await interaction.response.send_message('Count of players must be between 4 and 10.')
         else:
-            await interaction.response.send_message('count of players is <= 4 or <=10')
+            await interaction.response.send_message('Both voice channels must be specified.')
 
     else:
         await interaction.response.send_message('You are not in a voice channel.')
@@ -185,7 +182,6 @@ async def on_reaction_add(reaction, user):
                 if all(player in member_names for player in accepted_players): 
                     await peaking_players(message, accepted_players, voice_channel_1, voice_channel_2)
                     accepted_players.clear()
-                    await message.delete()
 
 
 async def peaking_players(message, accepted_players, voice_channel_1, voice_channel_2):
@@ -273,5 +269,7 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
 
     await message.channel.send(embed=embed)
     await message.remove_reaction(emoji, user)
+
+
         
-bot.run('MTMyNDA36yTeP7Vfg4')
+bot.run('MTMy4caOIasTYC2gKuk')
