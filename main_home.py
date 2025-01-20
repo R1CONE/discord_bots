@@ -261,6 +261,46 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
         await member.move_to(voice_channel_2)
     await message.guild.get_member_named(kapitan2_nickname).move_to(voice_channel_2)
 
+
+    try:
+        with connection.cursor() as cursor:
+            # SQL-запрос для создания таблицы
+            sql = f"""
+            INSERT INTO {history_server_name} (id_player_1_team_1,
+                id_player_2_team_1,
+                id_player_3_team_1,
+                id_player_4_team_1,
+                id_player_5_team_1,) VALUES ({el1[0]}, {el1[1]}, {el1[2]},{el1[3]},{el1[4]});
+
+            """
+            cursor.execute(sql)
+            connection.commit()
+
+
+    except Exception as e:
+        print(f"Error table {e}")
+
+    try:
+        with connection.cursor() as cursor:
+            # SQL-запрос для создания таблицы
+            sql = f"""
+            INSERT INTO {history_server_name} (id_player_1_team_2,
+                id_player_2_team_2,
+                id_player_3_team_2,
+                id_player_4_team_2,
+                id_player_5_team_2) VALUES ({el1[0]}, {el1[1]}, {el1[2]},{el1[3]},{el1[4]});
+
+            """
+            cursor.execute(sql)
+            connection.commit()
+
+
+    except Exception as e:
+        print(f"Error table {e}")
+
+
+
+
     embed = discord.Embed(title="Game is ready!", description="Here are your teams:", color=discord.Color.purple())
     embed.set_thumbnail(url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvbwstNLPp77vL3VG5G3H6EVUt705BVF-sEQ&usqp=CAU')
     embed.set_author(name="discord battle")
@@ -272,4 +312,4 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
 
 
         
-bot.run('MTMy4caOIasTYC2gKuk')
+bot.run('MTMyNDA3OTg9CMYLv2ZV6KbyCRyGGM')
