@@ -261,6 +261,38 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
         await member.move_to(voice_channel_2)
     await message.guild.get_member_named(kapitan2_nickname).move_to(voice_channel_2)
 
+    string_var = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+def generate_unique_id(connection, table_name):
+    while True:
+        # Генерация строки
+        id_of_lobby = ''.join(random.choices(string_var, k=20))
+        try:
+            with connection.cursor() as cursor:
+                # Проверяем, существует ли уже такой id
+                sql_check = f"SELECT COUNT(*) FROM {table_name} WHERE id_of_game = %s"
+                cursor.execute(sql_check, (id_of_lobby,))
+                result = cursor.fetchone()
+                if result[0] == 0:  # Если id уникален
+                    return id_of_lobby
+        except Exception as e:
+            print(f"Error checking ID: {e}")
+            break
+
+def insert_lobby_id(connection, history_server_name):
+    try:
+        id_of_lobby = generate_unique_id(connection, history_server_name)
+        with connection.cursor() as cursor:
+            # SQL-запрос для вставки нового id
+            sql_insert = f"""
+            INSERT INTO {history_server_name} (id_of_game) VALUES (%s)
+            """
+            cursor.execute(sql_insert, (id_of_lobby,))
+            connection.commit()
+            print(f"ID {id_of_lobby} успешно добавлен.")
+    except Exception as e:
+        print(f"Error inserting ID: {e}")
+
 
     try:
         with connection.cursor() as cursor:
@@ -288,7 +320,7 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
                 id_player_2_team_2,
                 id_player_3_team_2,
                 id_player_4_team_2,
-                id_player_5_team_2) VALUES ({el1[0]}, {el1[1]}, {el1[2]},{el1[3]},{el1[4]});
+                id_player_5_team_2) VALUES ({el2[0]}, {el1[1]}, {el1[2]},{el1[3]},{el1[4]});
 
             """
             cursor.execute(sql)
@@ -310,6 +342,4 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
     await message.channel.send(embed=embed)
     await message.remove_reaction(emoji, user)
 
-
-        
 bot.run('MTMyNDA3OTg9CMYLv2ZV6KbyCRyGGM')
