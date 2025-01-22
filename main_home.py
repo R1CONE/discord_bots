@@ -4,7 +4,6 @@ from discord.ext import commands
 import pymysql
 import random
 
-
 global voice_channel_1, voice_channel_2, kap
 accepted_players = []
 kap = 1  # Инициализация переменной kap
@@ -161,7 +160,7 @@ async def start_command(interaction: discord.Interaction):
     
 
 @bot.event
-async def on_reaction_add(reaction, user):
+async def on_reaction_add(interaction: discord.Interaction, reaction, user):
     if user.bot:
         return
 
@@ -179,14 +178,19 @@ async def on_reaction_add(reaction, user):
             voice_channel_1, voice_channel_2 = bot.voice_channels_dict.get(message.id, (None, None))
 
             if len(accepted_players) == len(member_names):
-                if all(player in member_names for player in accepted_players): 
-                    await peaking_players(message, accepted_players, voice_channel_1, voice_channel_2)
+                if all(player in member_names for player in accepted_players):
+                    await peaking_players( message, accepted_players, voice_channel_1, voice_channel_2, interaction = None)
                     accepted_players.clear()
 
 
-async def peaking_players(message, accepted_players, voice_channel_1, voice_channel_2):
+async def peaking_players( message, accepted_players, voice_channel_1, voice_channel_2, interaction: discord.Integration):
+
     kapitan_players = random.sample(accepted_players, 2)
     kapitan1_nickname, kapitan2_nickname = kapitan_players
+
+    server_name = interaction.guild.name
+    normal_server_name = server_name.replace(" ", "_")
+    history_server_name = normal_server_name + "_history"
 
     last_players = [player for player in accepted_players if player not in kapitan_players]
     list_com1, list_com2 = [], []
@@ -263,36 +267,36 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
 
     string_var = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-def generate_unique_id(connection, table_name):
-    while True:
-        # Генерация строки
-        id_of_lobby = ''.join(random.choices(string_var, k=20))
-        try:
-            with connection.cursor() as cursor:
-                # Проверяем, существует ли уже такой id
-                sql_check = f"SELECT COUNT(*) FROM {table_name} WHERE id_of_game = %s"
-                cursor.execute(sql_check, (id_of_lobby,))
-                result = cursor.fetchone()
-                if result[0] == 0:  # Если id уникален
-                    return id_of_lobby
-        except Exception as e:
-            print(f"Error checking ID: {e}")
-            break
+    def generate_unique_id(connection, history_server_name):
+        while True:
+            id_game = ''.join(random.choices(string_var, k=20))
+        
+            try:
+                with connection.cursor() as cursor:
+                    # SQL-запрос для проверки наличия id_game
+                    sql_check = f"SELECT COUNT(*) FROM {history_server_name} WHERE id_of_game = %s;"
+                    cursor.execute(sql_check, (id_game,))
+                    count = cursor.fetchone()[0]
+                
+                    if count == 0:
+                        return id_game
+            except Exception as e:
+                print(f"Error during uniqueness check: {e}")
+                raise
 
-def insert_lobby_id(connection, history_server_name):
     try:
-        id_of_lobby = generate_unique_id(connection, history_server_name)
+        # Генерация уникального ID
+        id_game = generate_unique_id(connection, history_server_name)
+    
         with connection.cursor() as cursor:
-            # SQL-запрос для вставки нового id
-            sql_insert = f"""
-            INSERT INTO {history_server_name} (id_of_game) VALUES (%s)
-            """
-            cursor.execute(sql_insert, (id_of_lobby,))
+            # SQL-запрос для вставки нового ID
+            sql_insert = f"INSERT INTO {history_server_name} (id_of_game) VALUES (%s);"
+            cursor.execute(sql_insert, (id_game,))
             connection.commit()
-            print(f"ID {id_of_lobby} успешно добавлен.")
-    except Exception as e:
-        print(f"Error inserting ID: {e}")
+            print(f"Successfully inserted id_game: {id_game}")
 
+    except Exception as e:
+        print(f"Error inserting id_game: {e}")
 
     try:
         with connection.cursor() as cursor:
@@ -341,5 +345,6 @@ def insert_lobby_id(connection, history_server_name):
 
     await message.channel.send(embed=embed)
     await message.remove_reaction(emoji, user)
+
 
 bot.run('MTMyNDA3OTg9CMYLv2ZV6KbyCRyGGM')
