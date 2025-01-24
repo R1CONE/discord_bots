@@ -180,7 +180,6 @@ async def on_reaction_add(reaction, user):
                     await peaking_players( message, accepted_players, voice_channel_1, voice_channel_2)
                     accepted_players.clear()
 
-
 async def peaking_players(message, accepted_players, voice_channel_1, voice_channel_2):
 
     
@@ -348,4 +347,5 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
 
     await message.channel.send(embed=embed)
     await message.remove_reaction(emoji, user)
+    
 bot.run('MTMyNDA3OTg9CMYLv2ZV6KbyCRyGGM')
