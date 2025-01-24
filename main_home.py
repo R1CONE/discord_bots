@@ -47,8 +47,6 @@ async def looking_user(interaction: discord.Interaction, voice_channel_1: discor
 
         
 
-        
-
 
         if voice_channel_1 and voice_channel_2:
             if 4 <= len(member_names) <= 10:
@@ -160,7 +158,7 @@ async def start_command(interaction: discord.Interaction):
     
 
 @bot.event
-async def on_reaction_add(interaction: discord.Interaction, reaction, user):
+async def on_reaction_add(reaction, user):
     if user.bot:
         return
 
@@ -179,16 +177,17 @@ async def on_reaction_add(interaction: discord.Interaction, reaction, user):
 
             if len(accepted_players) == len(member_names):
                 if all(player in member_names for player in accepted_players):
-                    await peaking_players( message, accepted_players, voice_channel_1, voice_channel_2, interaction = None)
+                    await peaking_players( message, accepted_players, voice_channel_1, voice_channel_2)
                     accepted_players.clear()
 
 
-async def peaking_players( message, accepted_players, voice_channel_1, voice_channel_2, interaction: discord.Integration):
+async def peaking_players(message, accepted_players, voice_channel_1, voice_channel_2):
 
+    
     kapitan_players = random.sample(accepted_players, 2)
     kapitan1_nickname, kapitan2_nickname = kapitan_players
 
-    server_name = interaction.guild.name
+    server_name = message.guild.name
     normal_server_name = server_name.replace(" ", "_")
     history_server_name = normal_server_name + "_history"
 
@@ -302,11 +301,13 @@ async def peaking_players( message, accepted_players, voice_channel_1, voice_cha
         with connection.cursor() as cursor:
             # SQL-запрос для создания таблицы
             sql = f"""
-            INSERT INTO {history_server_name} (id_player_1_team_1,
-                id_player_2_team_1,
-                id_player_3_team_1,
-                id_player_4_team_1,
-                id_player_5_team_1,) VALUES ({el1[0]}, {el1[1]}, {el1[2]},{el1[3]},{el1[4]});
+            UPDATE {history_server_name}
+            SET id_player_1_team_1 = ({el1[0]}),
+                id_player_2_team_1 = ({el1[1]}),
+                id_player_3_team_1 = ({el1[2]}),
+                id_player_4_team_1 = ({el1[3]}),
+                id_player_5_team_1 = ({el1[4]})
+            WHERE id_of_game = ({id_game});
 
             """
             cursor.execute(sql)
@@ -320,11 +321,13 @@ async def peaking_players( message, accepted_players, voice_channel_1, voice_cha
         with connection.cursor() as cursor:
             # SQL-запрос для создания таблицы
             sql = f"""
-            INSERT INTO {history_server_name} (id_player_1_team_2,
-                id_player_2_team_2,
-                id_player_3_team_2,
-                id_player_4_team_2,
-                id_player_5_team_2) VALUES ({el2[0]}, {el1[1]}, {el1[2]},{el1[3]},{el1[4]});
+            UPDATE {history_server_name}
+            SET id_player_1_team_2 = ({el2[0]}),
+                id_player_2_team_2 = ({el2[1]}),
+                id_player_3_team_2 = ({el2[2]}),
+                id_player_4_team_2 = ({el2[3]}),
+                id_player_5_team_2 = ({el2[4]})
+            WHERE id_of_game = ({id_game});
 
             """
             cursor.execute(sql)
@@ -345,6 +348,4 @@ async def peaking_players( message, accepted_players, voice_channel_1, voice_cha
 
     await message.channel.send(embed=embed)
     await message.remove_reaction(emoji, user)
-
-
 bot.run('MTMyNDA3OTg9CMYLv2ZV6KbyCRyGGM')
