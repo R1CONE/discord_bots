@@ -253,99 +253,71 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
 )
         await message.edit(embed=embed)
 
-    for el1 in list_com1:    
+    id_el1, id_el2 = [], []
+    for el1 in list_com1:
         member = discord.utils.get(message.guild.members, name=el1)
-        await member.move_to(voice_channel_1)
-    await message.guild.get_member_named(kapitan1_nickname).move_to(voice_channel_1)
-
-    for el2 in list_com2:    
+        if member:
+            await member.move_to(voice_channel_1)
+            id_el1.append(member.id)
+    captain1 = message.guild.get_member_named(kapitan1_nickname)
+    if captain1:
+        await captain1.move_to(voice_channel_1)
+        id_el1.append(captain1.id)
+    
+    for el2 in list_com2:
         member = discord.utils.get(message.guild.members, name=el2)
-        await member.move_to(voice_channel_2)
-    await message.guild.get_member_named(kapitan2_nickname).move_to(voice_channel_2)
-
-    string_var = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-
-    def generate_unique_id(connection, history_server_name):
-        while True:
-            id_game = ''.join(random.choices(string_var, k=20))
-        
-            try:
-                with connection.cursor() as cursor:
-                    # SQL-запрос для проверки наличия id_game
-                    sql_check = f"SELECT COUNT(*) FROM {history_server_name} WHERE id_of_game = %s;"
-                    cursor.execute(sql_check, (id_game,))
-                    count = cursor.fetchone()[0]
-                
-                    if count == 0:
-                        return id_game
-            except Exception as e:
-                print(f"Error during uniqueness check: {e}")
-                raise
-
-    try:
-        # Генерация уникального ID
-        id_game = generate_unique_id(connection, history_server_name)
+        if member:
+            await member.move_to(voice_channel_2)
+            id_el2.append(member.id)
+    captain2 = message.guild.get_member_named(kapitan2_nickname)
+    if captain2:
+        await captain2.move_to(voice_channel_2)
+        id_el2.append(captain2.id)
     
+    game_id = ''.join(random.choices("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=20))
+    
+    try:
         with connection.cursor() as cursor:
-            # SQL-запрос для вставки нового ID
             sql_insert = f"INSERT INTO {history_server_name} (id_of_game) VALUES (%s);"
-            cursor.execute(sql_insert, (id_game,))
+            cursor.execute(sql_insert, (game_id,))
             connection.commit()
-            print(f"Successfully inserted id_game: {id_game}")
-
     except Exception as e:
-        print(f"Error inserting id_game: {e}")
+        print(f"Error inserting game ID: {e}")
 
     try:
         with connection.cursor() as cursor:
-            # SQL-запрос для создания таблицы
-            sql = f"""
-            UPDATE {history_server_name}
-            SET id_player_1_team_1 = ({el1[0]}),
-                id_player_2_team_1 = ({el1[1]}),
-                id_player_3_team_1 = ({el1[2]}),
-                id_player_4_team_1 = ({el1[3]}),
-                id_player_5_team_1 = ({el1[4]})
-            WHERE id_of_game = ({id_game});
-
+            sql_update_team1 = f"""
+            UPDATE {history_server_name} SET 
+                id_player_1_team_1 = %s,
+                id_player_2_team_1 = %s,
+                id_player_3_team_1 = %s,
+                id_player_4_team_1 = %s,
+                id_player_5_team_1 = %s
+            WHERE id_of_game = %s;
             """
-            cursor.execute(sql)
+            cursor.execute(sql_update_team1, (*id_el1, game_id))
             connection.commit()
-
-
     except Exception as e:
-        print(f"Error table {e}")
+        print(f"Error updating team 1 data: {e}")
 
     try:
         with connection.cursor() as cursor:
-            # SQL-запрос для создания таблицы
-            sql = f"""
-            UPDATE {history_server_name}
-            SET id_player_1_team_2 = ({el2[0]}),
-                id_player_2_team_2 = ({el2[1]}),
-                id_player_3_team_2 = ({el2[2]}),
-                id_player_4_team_2 = ({el2[3]}),
-                id_player_5_team_2 = ({el2[4]})
-            WHERE id_of_game = ({id_game});
-
+            sql_update_team2 = f"""
+            UPDATE {history_server_name} SET 
+                id_player_1_team_2 = %s,
+                id_player_2_team_2 = %s,
+                id_player_3_team_2 = %s,
+                id_player_4_team_2 = %s,
+                id_player_5_team_2 = %s
+            WHERE id_of_game = %s;
             """
-            cursor.execute(sql)
+            cursor.execute(sql_update_team2, (*id_el2, game_id))
             connection.commit()
-
-
     except Exception as e:
-        print(f"Error table {e}")
-
-
-
-
-    embed = discord.Embed(title="Game is ready!", description="Here are your teams:", color=discord.Color.purple())
-    embed.set_thumbnail(url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvbwstNLPp77vL3VG5G3H6EVUt705BVF-sEQ&usqp=CAU')
-    embed.set_author(name="discord battle")
-    embed.add_field(name=f'Capitan 1 - @{kapitan1_nickname}', value=f'Players team 1: {", ".join(list_com1)}')
-    embed.add_field(name=f'Capitan 2 - @{kapitan2_nickname}', value=f'Players team 2: {", ".join(list_com2)}')
-
-    await message.channel.send(embed=embed)
-    await message.remove_reaction(emoji, user)
+        print(f"Error updating team 2 data: {e}")
     
-bot.run('MTMyNDA3OTg9CMYLv2ZV6KbyCRyGGM')
+    embed.title = "Game is ready!"
+    embed.description = "Here are your teams:"
+    await message.channel.send(embed=embed)
+    
+bot.run('MTMyNDA3OTMv5IzVu-HBIZE')
