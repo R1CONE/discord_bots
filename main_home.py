@@ -33,10 +33,63 @@ async def on_ready():
 @bot.tree.command(name="looking_user", description="Looking for discord user")
 @app_commands.describe(voice_channel_1="First voice channel", voice_channel_2="Second voice channel")
 async def looking_user(interaction: discord.Interaction, voice_channel_1: discord.VoiceChannel = None, voice_channel_2: discord.VoiceChannel = None):
+
+    normal_server_name = server_name.replace(" ", "_")
+
+    history_server_name = normal_server_name + "_history"
+
+    try:
+        with connection.cursor() as cursor:
+            # SQL-запрос для создания таблицы
+            sql = f"""
+            CREATE TABLE IF NOT EXISTS `{normal_server_name}` (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id VARCHAR(255) NOT NULL,
+                user_name VARCHAR(255) NOT NULL,
+                mmr INT NOT NULL,
+                join_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """
+            cursor.execute(sql)
+            connection.commit()
+            print(f"Table `{server_name}` checked/created successfully.")
+
+
+    except Exception as e:
+        print(f"Error creating table `{history_server_name}`: {e}")
+
+    try:
+        with connection.cursor() as cursor:
+            # SQL-запрос для создания таблицы
+            sql = f"""
+            CREATE TABLE IF NOT EXISTS `{history_server_name}` (
+                id_of_game VARCHAR(255)  PRIMARY KEY,
+                id_player_1_team_1 VARCHAR(255),
+                id_player_2_team_1 VARCHAR(255),
+                id_player_3_team_1 VARCHAR(255),
+                id_player_4_team_1 VARCHAR(255),
+                id_player_5_team_1 VARCHAR(255),
+                id_player_1_team_2 VARCHAR(255),
+                id_player_2_team_2 VARCHAR(255),
+                id_player_3_team_2 VARCHAR(255),
+                id_player_4_team_2 VARCHAR(255),
+                id_player_5_team_2 VARCHAR(255),
+                game_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """
+            cursor.execute(sql)
+            connection.commit()
+            print(f"Table `{server_name}` checked/created successfully.")
+
+
+    except Exception as e:
+        print(f"Error creating table `{server_name}`: {e}")
+    
     if interaction.user.voice and interaction.user.voice.channel:
 
         accepted_players.clear()
-
+ 
         voice_channel = interaction.user.voice.channel
         members = voice_channel.members
         member_names = [member.name for member in members]
@@ -103,57 +156,7 @@ async def start_command(interaction: discord.Interaction):
     embed.set_footer(text="Enjoy the game!")
 
     await interaction.response.send_message(embed=embed)
-    normal_server_name = server_name.replace(" ", "_")
-
-    history_server_name = normal_server_name + "_history"
-
-    try:
-        with connection.cursor() as cursor:
-            # SQL-запрос для создания таблицы
-            sql = f"""
-            CREATE TABLE IF NOT EXISTS `{normal_server_name}` (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id VARCHAR(255) NOT NULL,
-                user_name VARCHAR(255) NOT NULL,
-                mmr INT NOT NULL,
-                join_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-            """
-            cursor.execute(sql)
-            connection.commit()
-            print(f"Table `{server_name}` checked/created successfully.")
-
-
-    except Exception as e:
-        print(f"Error creating table `{history_server_name}`: {e}")
-
-    try:
-        with connection.cursor() as cursor:
-            # SQL-запрос для создания таблицы
-            sql = f"""
-            CREATE TABLE IF NOT EXISTS `{history_server_name}` (
-                id_of_game VARCHAR(255)  PRIMARY KEY,
-                id_player_1_team_1 INT,
-                id_player_2_team_1 INT,
-                id_player_3_team_1 INT,
-                id_player_4_team_1 INT,
-                id_player_5_team_1 INT,
-                id_player_1_team_2 INT,
-                id_player_2_team_2 INT,
-                id_player_3_team_2 INT,
-                id_player_4_team_2 INT,
-                id_player_5_team_2 INT,
-                game_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-            """
-            cursor.execute(sql)
-            connection.commit()
-            print(f"Table `{server_name}` checked/created successfully.")
-
-
-    except Exception as e:
-        print(f"Error creating table `{server_name}`: {e}")
+    
 
     
 
@@ -253,27 +256,43 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
 )
         await message.edit(embed=embed)
 
-    id_el1, id_el2 = [], []
+    nicknames_team1 = list_com1 + [kapitan1_nickname]
+    nicknames_team2 = list_com2 + [kapitan2_nickname]
+
+    guild = message.guild  # Добавлено
+    
+    print(nicknames_team1)
+    print(nicknames_team2)
+
+    team1_ids = [member.id for member in guild.members if member.name in nicknames_team1]
+    team2_ids = [member.id for member in guild.members if member.name in nicknames_team2]
+
+    print(team1_ids)
+    print(team2_ids)
+
+    
     for el1 in list_com1:
         member = discord.utils.get(message.guild.members, name=el1)
-        if member:
-            await member.move_to(voice_channel_1)
-            id_el1.append(member.id)
-    captain1 = message.guild.get_member_named(kapitan1_nickname)
+        await member.move_to(voice_channel_1)
+        captain1 = message.guild.get_member_named(kapitan1_nickname)
+
     if captain1:
         await captain1.move_to(voice_channel_1)
-        id_el1.append(captain1.id)
+        
     
     for el2 in list_com2:
         member = discord.utils.get(message.guild.members, name=el2)
-        if member:
-            await member.move_to(voice_channel_2)
-            id_el2.append(member.id)
-    captain2 = message.guild.get_member_named(kapitan2_nickname)
+        await member.move_to(voice_channel_2)
+        
+        captain2 = message.guild.get_member_named(kapitan2_nickname)
+
     if captain2:
         await captain2.move_to(voice_channel_2)
-        id_el2.append(captain2.id)
+        
+
     
+
+
     game_id = ''.join(random.choices("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=20))
     
     try:
@@ -288,14 +307,13 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
         with connection.cursor() as cursor:
             sql_update_team1 = f"""
             UPDATE {history_server_name} SET 
-                id_player_1_team_1 = %s,
-                id_player_2_team_1 = %s,
-                id_player_3_team_1 = %s,
-                id_player_4_team_1 = %s,
-                id_player_5_team_1 = %s
-            WHERE id_of_game = %s;
+                id_player_1_team_1 = {team1_ids[0]},
+                id_player_2_team_1 = {team1_ids[1]},
+                id_player_3_team_1 = {team1_ids[2]},
+                id_player_4_team_1 = {team1_ids[3]},
+                id_player_5_team_1 = {team1_ids[4]}
+            WHERE id_of_game = {game_id};
             """
-            cursor.execute(sql_update_team1, (*id_el1, game_id))
             connection.commit()
     except Exception as e:
         print(f"Error updating team 1 data: {e}")
@@ -304,14 +322,14 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
         with connection.cursor() as cursor:
             sql_update_team2 = f"""
             UPDATE {history_server_name} SET 
-                id_player_1_team_2 = %s,
-                id_player_2_team_2 = %s,
-                id_player_3_team_2 = %s,
-                id_player_4_team_2 = %s,
-                id_player_5_team_2 = %s
-            WHERE id_of_game = %s;
+                id_player_1_team_2 = {team2_ids[0]},
+                id_player_2_team_2 = {team2_ids[1]},
+                id_player_3_team_2 = {team2_ids[2]},
+                id_player_4_team_2 = {team2_ids[3]},
+                id_player_5_team_2 = {team2_ids[4]}
+            WHERE id_of_game = {game_id};
             """
-            cursor.execute(sql_update_team2, (*id_el2, game_id))
+            cursor.execute(sql_update_team2, (*team2_ids, game_id))
             connection.commit()
     except Exception as e:
         print(f"Error updating team 2 data: {e}")
@@ -320,4 +338,4 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
     embed.description = "Here are your teams:"
     await message.channel.send(embed=embed)
     
-bot.run('MTMyNDA3OTMv5IzVu-HBIZE')
+bot.run('MTMyNDA3OT5IzVu-HBIZE')
