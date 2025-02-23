@@ -33,7 +33,7 @@ async def on_ready():
 @bot.tree.command(name="looking_user", description="Looking for discord user")
 @app_commands.describe(voice_channel_1="First voice channel", voice_channel_2="Second voice channel")
 async def looking_user(interaction: discord.Interaction, voice_channel_1: discord.VoiceChannel = None, voice_channel_2: discord.VoiceChannel = None):
-
+    server_name = interaction.guild.name
     normal_server_name = server_name.replace(" ", "_")
 
     history_server_name = normal_server_name + "_history"
@@ -305,34 +305,12 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
 
     try:
         with connection.cursor() as cursor:
-            sql_update_team1 = f"""
-            UPDATE {history_server_name} SET 
-                id_player_1_team_1 = {team1_ids[0]},
-                id_player_2_team_1 = {team1_ids[1]},
-                id_player_3_team_1 = {team1_ids[2]},
-                id_player_4_team_1 = {team1_ids[3]},
-                id_player_5_team_1 = {team1_ids[4]}
-            WHERE id_of_game = {game_id};
-            """
+            sql_update = f"UPDATE {history_server_name} SET id_player_1_team_1 = %s WHERE id_of_game = %s;"
+            cursor.execute(sql_update, (team1_ids[0], game_id))
             connection.commit()
     except Exception as e:
-        print(f"Error updating team 1 data: {e}")
+        print(f"Error: {e}")
 
-    try:
-        with connection.cursor() as cursor:
-            sql_update_team2 = f"""
-            UPDATE {history_server_name} SET 
-                id_player_1_team_2 = {team2_ids[0]},
-                id_player_2_team_2 = {team2_ids[1]},
-                id_player_3_team_2 = {team2_ids[2]},
-                id_player_4_team_2 = {team2_ids[3]},
-                id_player_5_team_2 = {team2_ids[4]}
-            WHERE id_of_game = {game_id};
-            """
-            cursor.execute(sql_update_team2, (*team2_ids, game_id))
-            connection.commit()
-    except Exception as e:
-        print(f"Error updating team 2 data: {e}")
     
     embed.title = "Game is ready!"
     embed.description = "Here are your teams:"
