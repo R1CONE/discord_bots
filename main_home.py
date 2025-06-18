@@ -305,15 +305,31 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
 
     try:
         with connection.cursor() as cursor:
-            sql_update = f"UPDATE {history_server_name} SET id_player_1_team_1 = %s WHERE id_of_game = %s;"
-            cursor.execute(sql_update, (team1_ids[0], game_id))
+            # Создаём строки вида: id_player_1_team_1, id_player_2_team_1, ...
+            fields_team1 = [f"id_player_{i+1}_team_1" for i in range(len(team1_ids))]
+            fields_team2 = [f"id_player_{i+1}_team_2" for i in range(len(team2_ids))]
+
+            all_fields = fields_team1 + fields_team2
+            values = team1_ids + team2_ids
+
+            set_clause = ", ".join([f"{field} = %s" for field in all_fields])
+
+            sql_update = f"""
+                UPDATE {history_server_name}
+                SET {set_clause}
+                WHERE id_of_game = %s;
+            """
+
+            cursor.execute(sql_update, (*values, game_id))
             connection.commit()
+
+            
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error inserting player IDs: {e}")
 
     
     embed.title = "Game is ready!"
     embed.description = "Here are your teams:"
     await message.channel.send(embed=embed)
     
-bot.run('MTMyNDA3OT5IzVu-HBIZE')
+##bot.run('MTMyNDA3OTMyMTk2MjI1NDUxOQ.G9ce-bA0msi_PIyeLk')
