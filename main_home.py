@@ -28,6 +28,9 @@ async def on_ready():
     synced = await bot.tree.sync()
     print(synced)
     print("Slash commands: " + str(len(synced)) + " commands")
+
+
+
     
 
 @bot.tree.command(name="looking_user", description="Looking for discord user")
@@ -140,6 +143,10 @@ async def start_command(interaction: discord.Interaction):
     guild_id = interaction.guild.id  # Получаем ID текущей гильдии
     server_activation_status[guild_id] = True  # Активируем бота для этой гильдии
 
+    ##member_id = ctx.guild.get_member(1136577602119802920)
+
+    ##print('ebat korocze nik tipa ' + member_id)
+
     embed = discord.Embed(
         title="Welcome to the Discord Battle Bot!",
         description=(
@@ -183,9 +190,22 @@ async def on_reaction_add(reaction, user):
                     await peaking_players( message, accepted_players, voice_channel_1, voice_channel_2)
                     accepted_players.clear()
 
+
+
 async def peaking_players(message, accepted_players, voice_channel_1, voice_channel_2):
 
+##id of  game create ##
+    game_id = ''.join(random.choices("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=20))
     
+    try:
+        with connection.cursor() as cursor:
+            sql_insert = f"INSERT INTO {history_server_name} (id_of_game) VALUES (%s);"
+            cursor.execute(sql_insert, (game_id,))
+            connection.commit()
+    except Exception as e:
+        print(f"Error inserting game ID: {e}")
+
+ #####   
     kapitan_players = random.sample(accepted_players, 2)
     kapitan1_nickname, kapitan2_nickname = kapitan_players
 
@@ -252,12 +272,16 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
         embed.add_field(
     name='Unpeaked players:', 
     value='\n'.join([f"{player} - {(index + 1)}" for index, player in unpeaked_players.items()]) if unpeaked_players else 'All players have been picked', 
+    value = '\n ID of your game is -- {game_id}',
+    
     inline=False
 )
         await message.edit(embed=embed)
 
     nicknames_team1 = list_com1 + [kapitan1_nickname]
     nicknames_team2 = list_com2 + [kapitan2_nickname]
+
+    
 
     guild = message.guild  # Добавлено
     
@@ -293,15 +317,7 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
     
 
 
-    game_id = ''.join(random.choices("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=20))
     
-    try:
-        with connection.cursor() as cursor:
-            sql_insert = f"INSERT INTO {history_server_name} (id_of_game) VALUES (%s);"
-            cursor.execute(sql_insert, (game_id,))
-            connection.commit()
-    except Exception as e:
-        print(f"Error inserting game ID: {e}")
 
     try:
         with connection.cursor() as cursor:
@@ -331,5 +347,38 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
     embed.title = "Game is ready!"
     embed.description = "Here are your teams:"
     await message.channel.send(embed=embed)
+
+
+
+###############
+
+
+@bot.tree.command(name="registrate_win", description="These command you use after game ta earn your pts")
+@app_commands.describe(id_of_game = "id of game", )
+async def looking_user(interaction: discord.Interaction, id_of_game: str):
+    id_of_game
+    guild = interaction.guild
+
+    try:
+        # Nawiązywanie połączenia z bazą danych
+        connection = pymysql.connect(host='localhost', user='root', password='', database='dis_faceit')
+        with connection.cursor() as cursor:
+            # SQL-запрос для создания таблицы
+            sql = f"""
+            SELECT 
+            """
+            cursor.execute(sql)
+            connection.commit()
+            print(f"Table `{server_name}` checked/created successfully.")
+    except Exception as e:
+        print(f"Error connecting to database: {e}")
+
     
-##bot.run('MTMyNDA3OTMyMTk2MjI1NDUxOQ.G9ce-bA0msi_PIyeLk')
+    
+    nick_member = member_1.display_name
+    
+
+
+
+    
+bot.run('MTMyNDtHQWjHi-bA0msi_PIyeLk')
