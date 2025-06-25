@@ -329,11 +329,14 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
             values = team1_ids + team2_ids
 
             set_clause = ", ".join([f"{field} = %s" for field in all_fields])
-
+            
             sql_update = f"""
                 UPDATE {history_server_name}
                 SET {set_clause}
                 WHERE id_of_game = %s;
+
+                /*INSERT INTO nickname_capitan_1 VALUE {kapitan1_nickname};
+                INSERT INTO nickname_capitan_2 VALUE {kapitan2_nickname};*/
             """
 
             cursor.execute(sql_update, (*values, game_id))
@@ -355,30 +358,112 @@ async def peaking_players(message, accepted_players, voice_channel_1, voice_chan
 
 @bot.tree.command(name="registrate_win", description="These command you use after game ta earn your pts")
 @app_commands.describe(id_of_game = "id of game", )
-async def looking_user(interaction: discord.Interaction, id_of_game: str):
-    id_of_game
-    guild = interaction.guild
+async def looking_user(interaction: discord.Interaction, id_of_game: str, capitan_winner: ):
+    
 
     try:
         # Nawiązywanie połączenia z bazą danych
         connection = pymysql.connect(host='localhost', user='root', password='', database='dis_faceit')
         with connection.cursor() as cursor:
             # SQL-запрос для создания таблицы
+
+            server_name = interaction.guild.name
+            normal_server_name = server_name.replace(" ", "_")
+
+            history_server_name = normal_server_name + "_history"
             sql = f"""
-            SELECT 
+            INSERT INTO {normal_server_name} (user_id)  SELECT id_player_1_team_1   FROM {history_server_name}
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM {normal_server_name}
+                WHERE {normal_server_name}.user_id = {history_server_name}.id_player_1_team_1
+);
+
+
+
+
+            INSERT INTO {normal_server_name} (user_id) SELECT id_player_2_team_1 FROM {history_server_name}
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM {normal_server_name}
+                WHERE {normal_server_name}.user_id = {history_server_name}.id_player_2_team_1
+);
+
+
+
+
+            INSERT INTO {normal_server_name} (user_id) SELECT id_player_3_team_1 FROM {history_server_name}
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM {normal_server_name}
+                WHERE {normal_server_name}.user_id = {history_server_name}.id_player_3_team_1
+);
+
+
+
+            INSERT INTO {normal_server_name} (user_id) SELECT id_player_4_team_1 FROM {history_server_name}
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM {normal_server_name}
+                WHERE {normal_server_name}.user_id = {history_server_name}.id_player_4_team_1
+);
+
+
+
+
+            INSERT INTO {normal_server_name} (user_id) SELECT id_player_5_team_1 FROM {history_server_name}
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM {normal_server_name}
+                WHERE {normal_server_name}.user_id = {history_server_name}.id_player_5_team_1
+);
+
+
+
+            INSERT INTO {normal_server_name} (user_id) SELECT id_player_2_team_2 FROM {history_server_name}
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM {normal_server_name}
+                WHERE {normal_server_name}.user_id = {history_server_name}.id_player_2_team_2
+);
+
+
+            INSERT INTO {normal_server_name} (user_id) SELECT id_player_3_team_2 FROM {history_server_name}
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM {normal_server_name}
+                WHERE {normal_server_name}.user_id = {history_server_name}.id_player_3_team_2
+);
+
+
+
+            INSERT INTO {normal_server_name} (user_id) SELECT id_player_4_team_2 FROM {history_server_name}
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM {normal_server_name}
+                WHERE {normal_server_name}.user_id = {history_server_name}.id_player_4_team_2
+);
+
+
+
+            INSERT INTO {normal_server_name} (user_id) SELECT id_player_5_team_2 FROM {history_server_name}
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM {normal_server_name}
+                WHERE {normal_server_name}.user_id = {history_server_name}.id_player_5_team_2
+);
+
+
+
+
+            
             """
             cursor.execute(sql)
             connection.commit()
-            print(f"Table `{server_name}` checked/created successfully.")
+            
     except Exception as e:
         print(f"Error connecting to database: {e}")
 
     
-    
-    nick_member = member_1.display_name
-    
 
-
-
-    
-bot.run('MTMyNDtHQWjHi-bA0msi_PIyeLk')
+bot.run('MTMyNDA3QWjHi-bA0msi_PIyeLk')
